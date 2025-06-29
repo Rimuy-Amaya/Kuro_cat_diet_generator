@@ -82,6 +82,12 @@ def main():
             is_neutered = st.radio("是否已絕育？", ('是', '否')) == '是'
         with col_b:
             bcs = st.slider("身體狀況評分 BCS (1:過瘦, 5:理想, 9:過胖)", min_value=1, max_value=9, value=5)
+            st.caption("""
+            - **1-3分 (過瘦):** 肋骨、脊椎易見且突出。
+            - **4-5分 (理想):** 肋骨可觸及，腰身明顯。
+            - **6-7分 (過重):** 肋骨不易觸及，腰身不明顯。
+            - **8-9分 (肥胖):** 肋骨難以觸及，腹部明顯下垂。
+            """)
             is_pregnant = st.checkbox("母貓是否懷孕？")
             is_lactating = st.checkbox("母貓是否哺乳中？")
         
