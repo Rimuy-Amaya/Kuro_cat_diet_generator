@@ -218,7 +218,7 @@ def main():
         with col1:
             dry_food_grams = st.number_input("每日總餵食量 (公克)", key="dry_grams", min_value=0.0, step=1.0)
         with col2:
-            dry_food_kcal_per_1000g = st.number_input("每 1000 公克的熱量 (大卡)", key="dry_kcal", min_value=0.0, step=10.0)
+            dry_food_kcal_per_1000g = st.number_input("每 1000 公克的熱量 (大卡)", key="dry_kcal", min_value=0.0, value=3500.0, step=10.0)
 
         # --- 濕食輸入 ---
         st.subheader("濕食 (主食罐/副食罐)")
@@ -226,7 +226,7 @@ def main():
         with col3:
             wet_food_grams = st.number_input("每日總餵食量 (公克)", key="wet_grams", min_value=0.0, step=1.0)
         with col4:
-            wet_food_kcal_per_100g = st.number_input("每 100 公克的熱量 (大卡)", key="wet_kcal", min_value=0.0, step=1.0)
+            wet_food_kcal_per_100g = st.number_input("每 100 公克的熱量 (大卡)", key="wet_kcal", min_value=0.0, value=100.0, step=1.0)
 
         # --- 計算與比較按鈕 ---
         if st.button("✅ 計算實際攝取並比較", key="analyze_intake"):
