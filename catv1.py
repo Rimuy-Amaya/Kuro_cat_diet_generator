@@ -58,10 +58,11 @@ def main():
     st.title("🐈‍ Kuro家貓咪熱量計算機")
 
     # 使用 st.tabs 將流程分為清晰的三個步驟，優化使用者介面
-    tab1, tab2, tab3 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "🐾 **第一步：計算建議熱量**",
         "📊 **第二步：分析目前飲食**",
-        "🥗 **第三步：規劃飲食建議**"
+        "🥗 **第三步：規劃飲食建議**",
+        "📄 **第四步：健康報告總覽**"
     ])
 
     # --- Tab 1: 計算建議熱量 (DER) ---
@@ -106,11 +107,29 @@ def main():
                     multiplier = get_activity_multiplier(age, is_neutered, bcs, is_pregnant, is_lactating)
                     der = rer * multiplier
                     st.session_state.der = der # 將 der 存儲在 session state
+
+                    # 儲存詳細資訊以供報告頁使用
+                    st.session_state.cat_info = {
+                        "weight": weight, "age_years": age_years, "age_months": age_months_part,
+                        "is_neutered": "是" if is_neutered else "否", "bcs": bcs
+                    }
+                    st.session_state.der_info = {
+                        "rer": rer, "multiplier": multiplier, "der": der, "water_intake": der
+                    }
+                    # 如果重新計算第一步，就清除舊的飲食分析和計畫
+                    if 'intake_analysis' in st.session_state: del st.session_state.intake_analysis
+                    if 'feeding_plan' in st.session_state: del st.session_state.feeding_plan
+
                     st.subheader("📈 計算結果")
                     st.write(f"靜息能量需求 (RER): **{rer:.2f} 大卡/天**")
                     st.write(f"活動係數: **{multiplier:.1f}**")
                     st.success(f"每日建議熱量 (DER): **{der:.2f} 大卡/天**")
                     st.info("DER 是根據貓咪的詳細身體狀況估算的每日建議攝取熱量。")
+
+                    st.markdown("---")
+                    st.subheader("💧 每日建議攝水量 (參考)")
+                    st.metric(label="建議總飲水量", value=f"{der:.0f} 毫升/天")
+                    st.caption("此數值包含從食物(尤其是濕食)和直接飲水中獲得的所有水分。")
 
     # --- Tab 2: 計算實際攝取熱量並比較 ---
     with tab2:
@@ -146,6 +165,14 @@ def main():
             wet_food_calories = (wet_food_grams / 100.0) * wet_food_kcal_per_100g
             total_intake = dry_food_calories + wet_food_calories
 
+            # 儲存分析結果以供報告頁使用
+            calorie_difference = total_intake - der
+            st.session_state.intake_analysis = {
+                "dry_food_grams": dry_food_grams, "dry_food_kcal": dry_food_calories,
+                "wet_food_grams": wet_food_grams, "wet_food_kcal": wet_food_calories,
+                "total_intake": total_intake, "calorie_difference": calorie_difference
+            }
+
             st.subheader("📊 熱量攝取分析")
             st.write(f"從乾乾攝取的熱量: **{dry_food_calories:.2f} 大卡**")
             st.write(f"從濕食攝取的熱量: **{wet_food_calories:.2f} 大卡**")
@@ -154,8 +181,6 @@ def main():
             # 進行比較
             st.markdown("---")
             st.subheader("⚖️ 攝取與建議量比較")
-            
-            calorie_difference = total_intake - der
             
             st.write(f"每日建議攝取 (DER): **{der:.2f} 大卡**")
             st.write(f"每日實際攝取: **{total_intake:.2f} 大卡**")
@@ -198,6 +223,13 @@ def main():
                 required_dry_grams = (target_dry_calories / dry_food_kcal_per_1000g) * 1000.0 if dry_food_kcal_per_1000g > 0 else 0
                 required_wet_grams = (target_wet_calories / wet_food_kcal_per_100g) * 100.0 if wet_food_kcal_per_100g > 0 else 0
 
+                # 儲存飲食計畫以供報告頁使用
+                st.session_state.feeding_plan = { "wet_food_percentage": wet_food_percentage, "required_dry_grams": required_dry_grams, "required_wet_grams": required_wet_grams }
+
+                # 計算建議的公克數
+                required_dry_grams = (target_dry_calories / dry_food_kcal_per_1000g) * 1000.0 if dry_food_kcal_per_1000g > 0 else 0
+                required_wet_grams = (target_wet_calories / wet_food_kcal_per_100g) * 100.0 if wet_food_kcal_per_100g > 0 else 0
+
                 st.subheader("🍽️ 每日建議餵食量")
                 st.info(f"為了達到每日 **{der:.2f} 大卡** 的目標：")
 
@@ -208,6 +240,52 @@ def main():
                     st.metric(label="濕食 (主食罐)", value=f"{required_wet_grams:.1f} 公克")
 
                 st.caption(f"此建議是基於 {100-wet_food_percentage}% 乾食與 {wet_food_percentage}% 濕食的熱量佔比所計算。請在 1-2 週內密切觀察貓咪的體重和身體狀況，並與您的獸醫師討論，視情況微調餵食量。")
+
+    # --- Tab 4: 健康報告總覽 ---
+    with tab4:
+        st.header("📄 貓咪健康報告總覽")
+
+        if 'der_info' not in st.session_state:
+            st.info("請先從「第一步」開始，完成貓咪的熱量計算，才能產生報告。")
+        else:
+            # 從 session_state 安全地讀取資料
+            cat_info = st.session_state.get('cat_info', {})
+            der_info = st.session_state.get('der_info', {})
+            intake_analysis = st.session_state.get('intake_analysis')
+            feeding_plan = st.session_state.get('feeding_plan')
+
+            # 區塊一：貓咪基本資料
+            st.subheader("🐾 貓咪基本資料")
+            col1, col2 = st.columns(2)
+            col1.metric("體重", f"{cat_info.get('weight', 0):.2f} 公斤")
+            col1.metric("BCS", f"{cat_info.get('bcs', 0)} / 9")
+            col2.metric("年齡", f"{cat_info.get('age_years', 0)} 歲 {cat_info.get('age_months', 0)} 個月")
+            col2.metric("絕育狀態", cat_info.get('is_neutered', '未知'))
+            st.markdown("---")
+
+            # 區塊二：每日建議攝取
+            st.subheader("📈 每日建議攝取")
+            col1, col2 = st.columns(2)
+            col1.metric("建議熱量 (DER)", f"{der_info.get('der', 0):.2f} 大卡/天")
+            col2.metric("建議飲水", f"{der_info.get('water_intake', 0):.0f} 毫升/天")
+            st.markdown("---")
+
+            # 區塊三：目前飲食分析 (如果已計算)
+            if intake_analysis:
+                st.subheader("📊 目前飲食分析")
+                col1, col2 = st.columns(2)
+                col1.metric("每日總攝取熱量", f"{intake_analysis.get('total_intake', 0):.2f} 大卡")
+                diff = intake_analysis.get('calorie_difference', 0)
+                col2.metric("與建議量差異", f"{diff:+.2f} 大卡", delta=f"{-diff:.2f} 大卡", delta_color="inverse")
+                st.markdown("---")
+
+            # 區塊四：建議餵食計畫 (如果已計算)
+            if feeding_plan:
+                st.subheader("🥗 建議餵食計畫")
+                st.write(f"基於 **{100 - feeding_plan.get('wet_food_percentage', 0)}% 乾食** 與 **{feeding_plan.get('wet_food_percentage', 0)}% 濕食** 的熱量佔比")
+                col1, col2 = st.columns(2)
+                col1.metric("建議乾食餵食量", f"{feeding_plan.get('required_dry_grams', 0):.1f} 公克/天")
+                col2.metric("建議濕食餵食量", f"{feeding_plan.get('required_wet_grams', 0):.1f} 公克/天")
 
 if __name__ == "__main__":
     main()
