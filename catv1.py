@@ -65,7 +65,7 @@ def main():
             age = st.number_input("年齡 (月)", min_value=1, max_value=300, value=24, step=1)
             is_neutered = st.radio("是否已絕育？", ('是', '否')) == '是'
         with col_b:
-            bcs = st.slider("身體狀況評分 BCS (1-9分，5為理想)", min_value=1, max_value=9, value=5)
+            bcs = st.slider("身體狀況評分 BCS (1:過瘦, 5:理想, 9:過胖)", min_value=1, max_value=9, value=5)
             is_pregnant = st.checkbox("母貓是否懷孕？")
             is_lactating = st.checkbox("母貓是否哺乳中？")
 
