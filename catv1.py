@@ -70,7 +70,15 @@ def main():
         col_a, col_b = st.columns(2)
         with col_a:
             weight = st.number_input("體重 (公斤)", min_value=0.1, max_value=20.0, value=4.0, step=0.1)
-            age = st.number_input("年齡 (月)", min_value=1, max_value=300, value=24, step=1)
+            
+            # 優化年齡輸入，讓使用者可以分別輸入歲和月
+            st.write("年齡")
+            age_col1, age_col2 = st.columns(2)
+            with age_col1:
+                age_years = st.number_input("歲", min_value=0, max_value=25, value=2, step=1, key="age_years")
+            with age_col2:
+                age_months_part = st.number_input("個月", min_value=0, max_value=11, value=0, step=1, key="age_months")
+
             is_neutered = st.radio("是否已絕育？", ('是', '否')) == '是'
         with col_b:
             bcs = st.slider("身體狀況評分 BCS (1:過瘦, 5:理想, 9:過胖)", min_value=1, max_value=9, value=5)
@@ -79,17 +87,24 @@ def main():
         
         # --- 計算按鈕 ---
         if st.button("✅ 計算貓咪每日所需熱量", key="calc_der"):
-            # 將計算結果保存在 session state 中，以便第二部分使用
-            rer = calculate_rer(weight)
-            if rer is not None:
-                multiplier = get_activity_multiplier(age, is_neutered, bcs, is_pregnant, is_lactating)
-                der = rer * multiplier
-                st.session_state.der = der # 將 der 存儲在 session state
-                st.subheader("📈 計算結果")
-                st.write(f"靜息能量需求 (RER): **{rer:.2f} 大卡/天**")
-                st.write(f"活動係數: **{multiplier:.1f}**")
-                st.success(f"每日建議熱量 (DER): **{der:.2f} 大卡/天**")
-                st.info("DER 是根據貓咪的詳細身體狀況估算的每日建議攝取熱量。")
+            # 從新的輸入框計算總月數
+            age = age_years * 12 + age_months_part
+
+            # 增加年齡檢查
+            if age <= 0:
+                st.error("貓咪總年齡必須大於 0 個月，請重新輸入。")
+            else:
+                # 將計算結果保存在 session state 中，以便第二部分使用
+                rer = calculate_rer(weight)
+                if rer is not None:
+                    multiplier = get_activity_multiplier(age, is_neutered, bcs, is_pregnant, is_lactating)
+                    der = rer * multiplier
+                    st.session_state.der = der # 將 der 存儲在 session state
+                    st.subheader("📈 計算結果")
+                    st.write(f"靜息能量需求 (RER): **{rer:.2f} 大卡/天**")
+                    st.write(f"活動係數: **{multiplier:.1f}**")
+                    st.success(f"每日建議熱量 (DER): **{der:.2f} 大卡/天**")
+                    st.info("DER 是根據貓咪的詳細身體狀況估算的每日建議攝取熱量。")
 
     # --- Tab 2: 計算實際攝取熱量並比較 ---
     with tab2:
