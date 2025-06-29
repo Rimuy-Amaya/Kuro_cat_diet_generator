@@ -68,18 +68,20 @@ def main():
             bcs = st.slider("身體狀況評分 BCS (1:過瘦, 5:理想, 9:過胖)", min_value=1, max_value=9, value=5)
             is_pregnant = st.checkbox("母貓是否懷孕？")
             is_lactating = st.checkbox("母貓是否哺乳中？")
-
-        # 將計算結果保存在 session state 中，以便第二部分使用
-        rer = calculate_rer(weight)
-        if rer is not None:
-            multiplier = get_activity_multiplier(age, is_neutered, bcs, is_pregnant, is_lactating)
-            der = rer * multiplier
-            st.session_state.der = der # 將 der 存儲在 session state
-            st.subheader("📈 計算結果")
-            st.write(f"靜息能量需求 (RER): **{rer:.2f} 大卡/天**")
-            st.write(f"活動係數: **{multiplier:.1f}**")
-            st.success(f"每日建議熱量 (DER): **{der:.2f} 大卡/天**")
-            st.info("DER 是根據貓咪的詳細身體狀況估算的每日建議攝取熱量。")
+        
+        # --- 計算按鈕 ---
+        if st.button("✅ 計算貓咪每日所需熱量"):
+            # 將計算結果保存在 session state 中，以便第二部分使用
+            rer = calculate_rer(weight)
+            if rer is not None:
+                multiplier = get_activity_multiplier(age, is_neutered, bcs, is_pregnant, is_lactating)
+                der = rer * multiplier
+                st.session_state.der = der # 將 der 存儲在 session state
+                st.subheader("📈 計算結果")
+                st.write(f"靜息能量需求 (RER): **{rer:.2f} 大卡/天**")
+                st.write(f"活動係數: **{multiplier:.1f}**")
+                st.success(f"每日建議熱量 (DER): **{der:.2f} 大卡/天**")
+                st.info("DER 是根據貓咪的詳細身體狀況估算的每日建議攝取熱量。")
 
     # --- Part 2: 新增功能 - 計算實際攝取熱量並比較 ---
     st.markdown("---")
@@ -138,6 +140,44 @@ def main():
             else:
                 st.balloons()
                 st.success("🎉 **完美！** 貓咪的熱量攝取與建議值非常接近！")
+
+    # --- Part 3: 新增功能 - 飲食調整建議 ---
+    st.markdown("---")
+    with st.expander("第三步：飲食調整建議", expanded=False):
+        st.write("若貓咪的熱量攝取需要調整，可使用此工具計算符合每日建議熱量 (DER) 的乾、濕食餵食量。")
+
+        # 檢查是否已完成第一步和第二步的必要輸入
+        if 'der' not in st.session_state or st.session_state.der is None:
+            st.warning("請先在第一步計算貓咪的每日建議熱量 (DER)。")
+        elif dry_food_kcal_per_1000g == 0 and wet_food_kcal_per_100g == 0:
+            st.warning("請在第二步輸入至少一種食物的熱量資訊，才能進行餵食量建議。")
+        else:
+            # 讓使用者設定乾濕食的熱量比例
+            st.subheader("設定乾濕食熱量比例")
+            wet_food_percentage = st.slider(
+                "希望「濕食」提供的熱量佔每日總熱量的百分比 (%)",
+                min_value=0, max_value=100, value=50, step=5
+            )
+
+            if st.button("⚖️ 產生建議餵食量"):
+                der = st.session_state.der
+                target_wet_calories = der * (wet_food_percentage / 100.0)
+                target_dry_calories = der * ((100 - wet_food_percentage) / 100.0)
+
+                # 計算建議的公克數
+                required_dry_grams = (target_dry_calories / dry_food_kcal_per_1000g) * 1000.0 if dry_food_kcal_per_1000g > 0 else 0
+                required_wet_grams = (target_wet_calories / wet_food_kcal_per_100g) * 100.0 if wet_food_kcal_per_100g > 0 else 0
+
+                st.subheader("🍽️ 每日建議餵食量")
+                st.info(f"為了達到每日 **{der:.2f} 大卡** 的目標：")
+
+                col_rec_1, col_rec_2 = st.columns(2)
+                with col_rec_1:
+                    st.metric(label="乾食 (乾乾)", value=f"{required_dry_grams:.1f} 公克")
+                with col_rec_2:
+                    st.metric(label="濕食 (主食罐)", value=f"{required_wet_grams:.1f} 公克")
+
+                st.caption(f"此建議是基於 {100-wet_food_percentage}% 乾食與 {wet_food_percentage}% 濕食的熱量佔比所計算。請在 1-2 週內密切觀察貓咪的體重和身體狀況，並與您的獸醫師討論，視情況微調餵食量。")
 
 if __name__ == "__main__":
     main()
