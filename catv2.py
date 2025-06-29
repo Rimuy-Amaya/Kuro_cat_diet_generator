@@ -68,20 +68,18 @@ def main():
             bcs = st.slider("身體狀況評分 BCS (1:過瘦, 5:理想, 9:過胖)", min_value=1, max_value=9, value=5)
             is_pregnant = st.checkbox("母貓是否懷孕？")
             is_lactating = st.checkbox("母貓是否哺乳中？")
-        
-        # --- 計算按鈕 ---
-        if st.button("計算貓咪每日所需熱量"):
-            # 將計算結果保存在 session state 中，以便第二部分使用
-            rer = calculate_rer(weight)
-            if rer is not None:
-                multiplier = get_activity_multiplier(age, is_neutered, bcs, is_pregnant, is_lactating)
-                der = rer * multiplier
-                st.session_state.der = der # 將 der 存儲在 session state
-                st.subheader("📈 計算結果")
-                st.write(f"靜息能量需求 (RER): **{rer:.2f} 大卡/天**")
-                st.write(f"活動係數: **{multiplier:.1f}**")
-                st.success(f"每日建議熱量 (DER): **{der:.2f} 大卡/天**")
-                st.info("DER 是根據貓咪的詳細身體狀況估算的每日建議攝取熱量。")
+
+        # 將計算結果保存在 session state 中，以便第二部分使用
+        rer = calculate_rer(weight)
+        if rer is not None:
+            multiplier = get_activity_multiplier(age, is_neutered, bcs, is_pregnant, is_lactating)
+            der = rer * multiplier
+            st.session_state.der = der # 將 der 存儲在 session state
+            st.subheader("📈 計算結果")
+            st.write(f"靜息能量需求 (RER): **{rer:.2f} 大卡/天**")
+            st.write(f"活動係數: **{multiplier:.1f}**")
+            st.success(f"每日建議熱量 (DER): **{der:.2f} 大卡/天**")
+            st.info("DER 是根據貓咪的詳細身體狀況估算的每日建議攝取熱量。")
 
     # --- Part 2: 新增功能 - 計算實際攝取熱量並比較 ---
     st.markdown("---")
