@@ -70,7 +70,7 @@ def main():
             is_lactating = st.checkbox("母貓是否哺乳中？")
         
         # --- 計算按鈕 ---
-        if st.button("計算貓咪每日所需熱量"):
+        if st.button("✅ 計算貓咪每日所需熱量"):
             # 將計算結果保存在 session state 中，以便第二部分使用
             rer = calculate_rer(weight)
             if rer is not None:
