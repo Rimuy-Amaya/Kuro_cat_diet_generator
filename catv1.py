@@ -54,8 +54,8 @@ def main():
     """
     Streamlit 應用程式主體。
     """
-    st.set_page_config(page_title="貓咪熱量計算機", page_icon="🐱")
-    st.title("🐱 進階貓咪熱量計算機")
+    st.set_page_config(page_title="Kuro家貓咪熱量計算機", page_icon="🐈‍")
+    st.title("🐈‍ Kuro家貓咪熱量計算機")
 
     # --- Part 1: 計算建議熱量 (DER) ---
     with st.expander("第一步：計算貓咪每日建議熱量 (DER)", expanded=True):
