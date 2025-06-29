@@ -1,4 +1,9 @@
 import streamlit as st
+from PIL import Image, ImageDraw, ImageFont
+import io
+import os
+from datetime import datetime
+
 
 def calculate_rer(weight_kg):
     """
@@ -50,6 +55,77 @@ def get_activity_multiplier(age_months, is_neutered, bcs, is_pregnant=False, is_
 
     return multiplier
 
+def generate_diet_report_image(cat_info, der_info, intake_analysis, feeding_plan):
+    """使用 Pillow 產生貓咪飲食報告圖檔"""
+    width, height = 800, 800
+    bg_color = (255, 255, 248)  # 柔和的米黃色
+    text_color = (40, 40, 40)
+    header_color = (0, 0, 0)
+    accent_color = (70, 130, 180) # 鋼藍色
+
+    image = Image.new('RGB', (width, height), bg_color)
+    draw = ImageDraw.Draw(image)
+
+    try:
+        title_font = ImageFont.truetype("font.ttf", 48)
+        header_font = ImageFont.truetype("font.ttf", 32)
+        body_font = ImageFont.truetype("font.ttf", 24)
+        caption_font = ImageFont.truetype("font.ttf", 16)
+    except IOError:
+        # 此處錯誤應由主程式的 os.path.exists 檢查提前攔截
+        return None
+
+    # --- 繪製內容 ---
+    draw.text((width/2, 50), "貓咪飲食報告", font=title_font, fill=header_color, anchor="ms")
+
+    y_pos = 120
+    # 貓咪基本資料
+    draw.text((50, y_pos), "🐾 貓咪基本資料", font=header_font, fill=accent_color)
+    y_pos += 50
+    draw.text((80, y_pos), f"體重: {cat_info.get('weight', 0):.2f} 公斤", font=body_font, fill=text_color)
+    draw.text((400, y_pos), f"年齡: {cat_info.get('age_years', 0)} 歲 {cat_info.get('age_months', 0)} 個月", font=body_font, fill=text_color)
+    y_pos += 40
+    draw.text((80, y_pos), f"BCS: {cat_info.get('bcs', 0)} / 9", font=body_font, fill=text_color)
+    draw.text((400, y_pos), f"絕育狀態: {cat_info.get('is_neutered', '未知')}", font=body_font, fill=text_color)
+
+    # 每日建議攝取
+    y_pos += 80
+    draw.text((50, y_pos), "📈 每日建議攝取", font=header_font, fill=accent_color)
+    y_pos += 50
+    draw.text((80, y_pos), f"建議熱量 (DER): {der_info.get('der', 0):.2f} 大卡/天", font=body_font, fill=text_color)
+    y_pos += 40
+    draw.text((80, y_pos), f"建議飲水: {der_info.get('water_intake', 0):.0f} 毫升/天", font=body_font, fill=text_color)
+
+    # 目前飲食分析
+    if intake_analysis:
+        y_pos += 80
+        draw.text((50, y_pos), "📊 目前飲食分析", font=header_font, fill=accent_color)
+        y_pos += 50
+        draw.text((80, y_pos), f"每日總攝取熱量: {intake_analysis.get('total_intake', 0):.2f} 大卡", font=body_font, fill=text_color)
+        y_pos += 40
+        diff = intake_analysis.get('calorie_difference', 0)
+        draw.text((80, y_pos), f"與建議量差異: {diff:+.2f} 大卡", font=body_font, fill=text_color)
+
+    # 建議餵食計畫
+    if feeding_plan:
+        y_pos += 80
+        draw.text((50, y_pos), "🥗 建議餵食計畫", font=header_font, fill=accent_color)
+        y_pos += 40
+        draw.text((80, y_pos), f"({100 - feeding_plan.get('wet_food_percentage', 0)}% 乾食 / {feeding_plan.get('wet_food_percentage', 0)}% 濕食 熱量佔比)", font=caption_font, fill=text_color)
+        y_pos += 30
+        draw.text((80, y_pos), f"乾食: {feeding_plan.get('required_dry_grams', 0):.1f} 公克/天", font=body_font, fill=text_color)
+        y_pos += 40
+        draw.text((80, y_pos), f"濕食: {feeding_plan.get('required_wet_grams', 0):.1f} 公克/天", font=body_font, fill=text_color)
+
+    # 頁腳
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    draw.text((50, height - 40), f"報告生成時間: {timestamp}", font=caption_font, fill=text_color)
+    draw.text((width - 50, height - 40), "Kuro家貓咪熱量計算機 (僅供參考)", font=caption_font, fill=text_color, anchor="rs")
+
+    buf = io.BytesIO()
+    image.save(buf, format='PNG')
+    return buf.getvalue()
+
 def main():
     """
     Streamlit 應用程式主體。
@@ -58,11 +134,11 @@ def main():
     st.title("🐈‍ Kuro家貓咪熱量計算機")
 
     # 使用 st.tabs 將流程分為清晰的三個步驟，優化使用者介面
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([ # 1. 修改報告名稱
         "🐾 **第一步：計算建議熱量**",
         "📊 **第二步：分析目前飲食**",
         "🥗 **第三步：規劃飲食建議**",
-        "📄 **第四步：健康報告總覽**"
+        "📄 **第四步：飲食報告總覽**"
     ])
 
     # --- Tab 1: 計算建議熱量 (DER) ---
@@ -226,13 +302,9 @@ def main():
                 # 儲存飲食計畫以供報告頁使用
                 st.session_state.feeding_plan = { "wet_food_percentage": wet_food_percentage, "required_dry_grams": required_dry_grams, "required_wet_grams": required_wet_grams }
 
-                # 計算建議的公克數
-                required_dry_grams = (target_dry_calories / dry_food_kcal_per_1000g) * 1000.0 if dry_food_kcal_per_1000g > 0 else 0
-                required_wet_grams = (target_wet_calories / wet_food_kcal_per_100g) * 100.0 if wet_food_kcal_per_100g > 0 else 0
-
                 st.subheader("🍽️ 每日建議餵食量")
                 st.info(f"為了達到每日 **{der:.2f} 大卡** 的目標：")
-
+                
                 col_rec_1, col_rec_2 = st.columns(2)
                 with col_rec_1:
                     st.metric(label="乾食 (乾乾)", value=f"{required_dry_grams:.1f} 公克")
@@ -241,11 +313,11 @@ def main():
 
                 st.caption(f"此建議是基於 {100-wet_food_percentage}% 乾食與 {wet_food_percentage}% 濕食的熱量佔比所計算。請在 1-2 週內密切觀察貓咪的體重和身體狀況，並與您的獸醫師討論，視情況微調餵食量。")
 
-    # --- Tab 4: 健康報告總覽 ---
+    # --- Tab 4: 飲食報告總覽 ---
     with tab4:
-        st.header("📄 貓咪健康報告總覽")
+        st.header("📄 貓咪飲食報告總覽") # 1. 修改報告名稱
 
-        if 'der_info' not in st.session_state:
+        if 'der_info' not in st.session_state: # 2. 新增下載按鈕
             st.info("請先從「第一步」開始，完成貓咪的熱量計算，才能產生報告。")
         else:
             # 從 session_state 安全地讀取資料
@@ -286,6 +358,28 @@ def main():
                 col1, col2 = st.columns(2)
                 col1.metric("建議乾食餵食量", f"{feeding_plan.get('required_dry_grams', 0):.1f} 公克/天")
                 col2.metric("建議濕食餵食量", f"{feeding_plan.get('required_wet_grams', 0):.1f} 公克/天")
+            
+            # --- 下載報告按鈕區塊 ---
+            st.markdown("---")
+            st.subheader("📥 下載報告")
+
+            font_path = "font.ttf"
+            if not os.path.exists(font_path):
+                st.error(
+                    "⚠️ 找不到字體檔案 `font.ttf`！\n\n"
+                    "請將中文字體檔案 `font.ttf` 放到與 `catv1.py` 同一個資料夾中，才能產生報告圖檔。"
+                )
+            else:
+                st.info("點擊下方按鈕，即可將上方的飲食報告總覽下載為一張圖片。")
+                image_bytes = generate_diet_report_image(cat_info, der_info, intake_analysis, feeding_plan)
+                
+                if image_bytes:
+                    st.download_button(
+                        label="📥 下載貓咪飲食報告圖檔",
+                        data=image_bytes,
+                        file_name=f"cat_diet_report_{datetime.now().strftime('%Y%m%d')}.png",
+                        mime="image/png"
+                    )
 
 if __name__ == "__main__":
     main()
