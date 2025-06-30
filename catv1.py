@@ -146,9 +146,9 @@ def main():
     if 'dry_food_kcal_per_1000g' not in st.session_state: st.session_state.dry_food_kcal_per_1000g = 3600.0
     if 'wet_food_kcal_per_100g' not in st.session_state: st.session_state.wet_food_kcal_per_100g = 100.0
     if 'dry_food_package_weight' not in st.session_state: st.session_state.dry_food_package_weight = 1500.0
-    if 'dry_food_package_price' not in st.session_state: st.session_state.dry_food_package_price = 300.0
+    if 'dry_food_package_price' not in st.session_state: st.session_state.dry_food_package_price = 800.0
     if 'wet_food_package_weight' not in st.session_state: st.session_state.wet_food_package_weight = 80.0
-    if 'wet_food_package_price' not in st.session_state: st.session_state.wet_food_package_price = 30.0
+    if 'wet_food_package_price' not in st.session_state: st.session_state.wet_food_package_price = 50.0
     if 'wet_food_percentage_plan' not in st.session_state: st.session_state.wet_food_percentage_plan = 50
 
     # --- 步驟 1: 計算建議熱量 ---
