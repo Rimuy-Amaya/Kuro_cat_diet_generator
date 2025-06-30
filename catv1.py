@@ -474,9 +474,8 @@ def main():
             # 調整 generate_text_report 的參數順序
             full_report_text = generate_text_report(cat_info, der_info, intake_analysis, monthly_cost_info, feeding_plan)
             
-            st.code(full_report_text, language="text")
-            
-            st.info("💡 點擊上方報告內容區塊右上角的複製按鈕，即可將報告內容複製到剪貼簿。")
+            st.text_area("以下是您的貓咪飲食報告，方便複製貼上：", full_report_text, height=350, disabled=True)
+            st.info("💡 **手機複製提示：** 輕觸上方報告內容區塊，長按文字即可選取全部或部分內容，再點選「複製」按鈕。")
             
             st.markdown("---")
             # 重設按鈕
