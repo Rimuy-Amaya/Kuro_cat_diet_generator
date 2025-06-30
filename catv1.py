@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 # --- 常數定義 ---
-PAGE_TITLE = "Kuro家貓咪熱量計算機"
+PAGE_TITLE = "Kuro家＊貓咪飲食計畫產生器"
 PAGE_ICON = "🐈‍"
 
 # --- 輔助函數 ---
