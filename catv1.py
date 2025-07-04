@@ -166,13 +166,14 @@ def main():
         is_neutered_s1_display = st.radio("是否已絕育？", is_neutered_s1_options, index=is_neutered_s1_index, key="is_neutered_s1")
         is_neutered_s1 = (is_neutered_s1_display == '是')
         
-        bcs_s1 = st.slider("請家長目視/觸摸，為貓咪做BCS身體狀況評分 (1:過瘦, 5:理想, 9:過胖，拖拉可選擇分數)", min_value=1, max_value=9, value=st.session_state.cat_info.get('bcs', 5), key="bcs_s1")
-        st.caption("""
-        - **1-3分 (過瘦):** 肋骨、脊椎易見且突出。
-        - **4-5分 (理想):** 肋骨可觸及，腰身明顯。
-        - **6-7分 (過重):** 肋骨不易觸及，腰身不明顯。
-        - **8-9分 (肥胖):** 肋骨難以觸及，腹部明顯下垂。
-        """)
+        with st.container(border=True):
+            bcs_s1 = st.slider("請家長目視/觸摸，為貓咪做BCS身體狀況評分 (1:過瘦, 5:理想, 9:過胖，拖拉可選擇分數)", min_value=1, max_value=9, value=st.session_state.cat_info.get('bcs', 5), key="bcs_s1")
+            st.caption("""
+            - **1-3分 (過瘦):** 肋骨、脊椎易見且突出。
+            - **4-5分 (理想):** 肋骨可觸及，腰身明顯。
+            - **6-7分 (過重):** 肋骨不易觸及，腰身不明顯。
+            - **8-9分 (肥胖):** 肋骨難以觸及，腹部明顯下垂。
+            """)
         is_pregnant_s1 = st.checkbox("母貓是否懷孕？", value=st.session_state.cat_info.get('is_pregnant', False), key="is_pregnant_s1")
         is_lactating_s1 = st.checkbox("母貓是否哺乳中？", value=st.session_state.cat_info.get('is_lactating', False), key="is_lactating_s1")
         
