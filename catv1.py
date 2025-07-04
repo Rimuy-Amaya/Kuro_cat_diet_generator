@@ -166,7 +166,7 @@ def main():
         is_neutered_s1_display = st.radio("是否已絕育？", is_neutered_s1_options, index=is_neutered_s1_index, key="is_neutered_s1")
         is_neutered_s1 = (is_neutered_s1_display == '是')
         
-        bcs_s1 = st.slider("請家長目視，為貓咪身體狀況評分 BCS (1:過瘦, 5:理想, 9:過胖，拖拉選擇分數)", min_value=1, max_value=9, value=st.session_state.cat_info.get('bcs', 5), key="bcs_s1")
+        bcs_s1 = st.slider("請家長目視/觸摸，為貓咪做BCS身體狀況評分 (1:過瘦, 5:理想, 9:過胖，拖拉可選擇分數)", min_value=1, max_value=9, value=st.session_state.cat_info.get('bcs', 5), key="bcs_s1")
         st.caption("""
         - **1-3分 (過瘦):** 肋骨、脊椎易見且突出。
         - **4-5分 (理想):** 肋骨可觸及，腰身明顯。
